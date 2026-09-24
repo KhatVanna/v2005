@@ -1,7 +1,15 @@
 # V2005 Laravel API — Railway / production image
 # Context: backend/ (set Railway Root Directory to `backend`)
+# Laravel 13 requires PHP >= 8.4.1
 
-FROM composer:2 AS vendor
+FROM php:8.4-cli-bookworm AS vendor
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends git unzip libzip-dev \
+    && docker-php-ext-install zip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
@@ -11,14 +19,13 @@ RUN composer install \
     --no-scripts \
     --no-autoloader \
     --prefer-dist \
-    --no-interaction \
-    --ignore-platform-reqs
+    --no-interaction
 
 COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative --no-interaction
 
 
-FROM php:8.3-cli-bookworm
+FROM php:8.4-cli-bookworm
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \

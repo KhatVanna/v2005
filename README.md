@@ -45,7 +45,7 @@ V2005/
 ## Prerequisites
 
 - Node.js 20+
-- PHP 8.3+ (8.4 recommended)
+- PHP 8.4+ (required by Laravel 13)
 - Composer 2+
 - PostgreSQL 14+ with database `v2005_data`
 - PHP extensions: `pdo_pgsql`, `pgsql`
