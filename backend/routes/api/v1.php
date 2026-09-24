@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Http\Controllers\Api\V1\Admin\SettingController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\Catalog\BlogPostController as CatalogBlogPostController;
 use App\Http\Controllers\Api\V1\Catalog\CategoryController as CatalogCategoryController;
 use App\Http\Controllers\Api\V1\Catalog\ProductController as CatalogProductController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -23,6 +24,8 @@ Route::prefix('catalog')->group(function () {
     Route::get('/categories', [CatalogCategoryController::class, 'index']);
     Route::get('/products', [CatalogProductController::class, 'index']);
     Route::get('/products/{slug}', [CatalogProductController::class, 'show']);
+    Route::get('/blog', [CatalogBlogPostController::class, 'index']);
+    Route::get('/blog/{slug}', [CatalogBlogPostController::class, 'show']);
 });
 
 Route::prefix('auth')->group(function () {

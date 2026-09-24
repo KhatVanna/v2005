@@ -97,6 +97,7 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call(CatalogSeeder::class);
+        $this->call(BlogSeeder::class);
 
         $product = Product::query()->first();
 
