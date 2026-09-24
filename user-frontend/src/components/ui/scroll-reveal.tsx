@@ -8,6 +8,8 @@ type ScrollRevealProps = {
   delay?: number;
   once?: boolean;
   as?: "div" | "section" | "article" | "li";
+  /** Apple marketing-page motion: longer ease, more travel */
+  variant?: "default" | "apple";
 };
 
 export function ScrollReveal({
@@ -16,6 +18,7 @@ export function ScrollReveal({
   delay = 0,
   once = true,
   as: Tag = "div",
+  variant = "default",
 }: ScrollRevealProps) {
   const ref = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
@@ -30,9 +33,8 @@ export function ScrollReveal({
       return;
     }
 
-    // Already in view on first paint (above the fold) — reveal without waiting.
     const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+    if (rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
       setVisible(true);
       if (once) return;
     }
@@ -47,14 +49,14 @@ export function ScrollReveal({
         if (!once) setVisible(false);
       },
       {
-        threshold: 0.12,
-        rootMargin: "0px 0px -10% 0px",
+        threshold: variant === "apple" ? 0.18 : 0.12,
+        rootMargin: variant === "apple" ? "0px 0px -12% 0px" : "0px 0px -10% 0px",
       }
     );
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [once]);
+  }, [once, variant]);
 
   const style: CSSProperties | undefined =
     delay > 0
@@ -63,10 +65,12 @@ export function ScrollReveal({
         }
       : undefined;
 
+  const variantClass = variant === "apple" ? "scroll-reveal--apple" : "";
+
   return (
     <Tag
       ref={ref as never}
-      className={`scroll-reveal ${visible ? "scroll-reveal--in" : ""} ${className}`.trim()}
+      className={`scroll-reveal ${variantClass} ${visible ? "scroll-reveal--in" : ""} ${className}`.trim()}
       style={style}
     >
       {children}

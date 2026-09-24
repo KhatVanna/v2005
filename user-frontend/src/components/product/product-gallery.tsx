@@ -60,14 +60,14 @@ export function ProductGallery({ images, alt, discount }: ProductGalleryProps) {
       </div>
 
       <div className="space-y-3 sm:space-y-4">
-        <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-white sm:rounded-2xl">
+        <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-[#f5f5f7] sm:rounded-2xl">
           <Image
             key={activeImage}
             src={activeImage}
             alt={alt}
             fill
             priority
-            className="product-image-fade object-contain p-4 sm:p-6"
+            className="apple-image-fade object-contain p-4 sm:p-6"
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
           {discount ? (

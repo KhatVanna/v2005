@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Heart, Minus, Plus, ShieldCheck, ShoppingCart, Star } from "lucide-react";
 import { ProductCard } from "@/components/product/product-card";
 import { ProductGallery } from "@/components/product/product-gallery";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import type { CatalogProduct } from "@/data/demo-catalog.types";
 import { useFormatMoney } from "@/hooks/use-format-money";
 import { useCartStore } from "@/stores/cart-store";
@@ -50,8 +51,8 @@ export function ProductDetailView({ product, related }: ProductDetailViewProps) 
   };
 
   return (
-    <div className="product-reveal mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 sm:py-8">
-      <nav className="product-reveal__item mb-4 truncate text-xs text-muted-foreground sm:mb-6 sm:text-sm">
+    <div className="apple-reveal mx-auto w-full max-w-7xl px-3 py-5 sm:px-6 sm:py-8">
+      <nav className="apple-reveal__item mb-4 truncate text-xs text-muted-foreground sm:mb-6 sm:text-sm">
         <Link href="/" className="hover:text-foreground">
           Home
         </Link>
@@ -63,7 +64,7 @@ export function ProductDetailView({ product, related }: ProductDetailViewProps) 
         <span className="text-foreground">{product.name}</span>
       </nav>
 
-      <div className="product-reveal__item product-reveal__item--2 mb-4 sm:mb-6">
+      <div className="apple-reveal__item apple-reveal__item--2 mb-4 sm:mb-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {product.brand}
         </p>
@@ -73,11 +74,11 @@ export function ProductDetailView({ product, related }: ProductDetailViewProps) 
       </div>
 
       <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
-        <div className="product-reveal__item product-reveal__item--3">
+        <div className="apple-reveal__hero">
           <ProductGallery images={galleryImages} alt={product.name} discount={discount} />
         </div>
 
-        <div className="product-reveal__item product-reveal__item--4 space-y-4 sm:space-y-5">
+        <div className="apple-reveal__item apple-reveal__item--4 space-y-4 sm:space-y-5">
           <div className="rounded-xl border border-border bg-card p-4 shadow-sm sm:rounded-2xl sm:p-5">
             <div className="flex flex-wrap items-baseline gap-2 sm:gap-3">
               <span className="text-2xl font-bold sm:text-3xl">{formatMoney(product.price)}</span>
@@ -228,10 +229,12 @@ export function ProductDetailView({ product, related }: ProductDetailViewProps) 
         </div>
       </div>
 
-      <section className="product-reveal__item product-reveal__item--5 mt-12 max-w-3xl space-y-8">
+      <ScrollReveal as="section" variant="apple" className="mt-12 max-w-3xl space-y-8">
         <div>
-          <h2 className="text-2xl font-semibold text-navy">{product.name}</h2>
-          <p className="mt-4 text-sm leading-7 text-muted-foreground">
+          <h2 className="text-2xl font-semibold tracking-tight text-navy sm:text-3xl">
+            {product.name}
+          </h2>
+          <p className="mt-4 text-sm leading-7 text-muted-foreground sm:text-base sm:leading-8">
             {product.description ||
               `Experience premium quality with the ${product.name} from ${product.brand}. Designed for everyday performance with a clean finish and reliable build — a strong pick for customers who want value without compromise.`}
           </p>
@@ -256,14 +259,20 @@ export function ProductDetailView({ product, related }: ProductDetailViewProps) 
             </li>
           </ul>
         </div>
-      </section>
+      </ScrollReveal>
 
       {related.length > 0 ? (
-        <section className="product-reveal__item product-reveal__item--6 mt-14">
-          <h2 className="mb-6 text-2xl font-semibold text-navy">You might also like</h2>
+        <section className="mt-14">
+          <ScrollReveal variant="apple">
+            <h2 className="mb-6 text-2xl font-semibold tracking-tight text-navy sm:text-3xl">
+              You might also like
+            </h2>
+          </ScrollReveal>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {related.map((item) => (
-              <ProductCard key={item.id} product={item} />
+            {related.map((item, index) => (
+              <ScrollReveal key={item.id} variant="apple" delay={(index % 4) * 90}>
+                <ProductCard product={item} />
+              </ScrollReveal>
             ))}
           </div>
         </section>
