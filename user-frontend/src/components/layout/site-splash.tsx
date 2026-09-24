@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "v2005-splash-seen";
-const MIN_VISIBLE_MS = 1400;
-const FADE_MS = 420;
+const MIN_VISIBLE_MS = 1500;
+const FADE_MS = 480;
 
 export function SiteSplash() {
   const [visible, setVisible] = useState(false);
@@ -44,7 +44,6 @@ export function SiteSplash() {
       finish();
     } else {
       window.addEventListener("load", finish, { once: true });
-      // Fallback if load is delayed (slow images/API).
       window.setTimeout(finish, 2800);
     }
 
@@ -73,22 +72,18 @@ export function SiteSplash() {
       aria-live="polite"
       aria-label="Loading V2005"
     >
-      <div className="site-splash__glow" aria-hidden />
-      <div className="site-splash__card">
+      <div className="site-splash__mark" aria-hidden>
+        <span className="site-splash__ring" />
+        <span className="site-splash__ring site-splash__ring--delayed" />
         <div className="site-splash__logo-wrap">
           <Image
             src="/images/logo_v2005.png"
             alt="V2005"
-            width={168}
-            height={56}
+            width={200}
+            height={68}
             priority
             className="site-splash__logo"
           />
-        </div>
-        <p className="site-splash__brand">V2005 Online Shopping</p>
-        <p className="site-splash__tagline">Discover deals. Shop with confidence.</p>
-        <div className="site-splash__bar" aria-hidden>
-          <span className="site-splash__bar-fill" />
         </div>
       </div>
     </div>
