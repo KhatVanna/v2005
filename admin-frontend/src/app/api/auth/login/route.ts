@@ -1,12 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-export const maxDuration = 15;
+export const maxDuration = 30;
 
 const API_ORIGIN = process.env.LARAVEL_API_ORIGIN ?? "http://127.0.0.1:8000";
 const TOKEN_COOKIE = "v2005_admin_token";
 const ADMIN_ROLES = new Set(["super-admin", "admin", "staff"]);
-const UPSTREAM_TIMEOUT_MS = 8_000;
+const UPSTREAM_TIMEOUT_MS = 25_000;
 
 type AuthUser = {
   roles?: Array<{ slug: string }>;
