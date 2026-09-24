@@ -31,7 +31,7 @@ export function ProductGallery({ images, alt, discount }: ProductGalleryProps) {
 
   return (
     <div className="grid gap-3 sm:gap-4 lg:grid-cols-[72px_minmax(0,1fr)]">
-      {/* Desktop vertical thumbs — L192 style */}
+      {/* Desktop vertical thumbs */}
       <div className="hidden max-h-[min(70vh,560px)] flex-col gap-2.5 overflow-y-auto lg:flex">
         {gallery.map((image, index) => {
           const isActive = index === activeIndex;
