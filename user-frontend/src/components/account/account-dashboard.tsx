@@ -236,13 +236,17 @@ function ProfilePanel({
 
     setSaving(false);
 
-    if (!ok || !payload.success) {
+    if (!payload.success) {
       onError(
         payload.errors?.email?.[0] ??
           payload.errors?.name?.[0] ??
           payload.message ??
           "Unable to update profile."
       );
+      return;
+    }
+    if (!ok) {
+      onError("Unable to update profile.");
       return;
     }
 
@@ -800,13 +804,17 @@ function SecurityPanel({
 
     setSaving(false);
 
-    if (!ok || !payload.success) {
+    if (!payload.success) {
       onError(
         payload.errors?.current_password?.[0] ??
           payload.errors?.password?.[0] ??
           payload.message ??
           "Unable to update password."
       );
+      return;
+    }
+    if (!ok) {
+      onError("Unable to update password.");
       return;
     }
 

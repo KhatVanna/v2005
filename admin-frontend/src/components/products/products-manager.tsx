@@ -239,10 +239,15 @@ export function ProductsManager() {
       body: JSON.stringify(body),
     });
 
-    if (!ok || !payload.success) {
+    if (!payload.success) {
       setSaving(false);
       setFormErrors(payload.errors ?? {});
       setError(payload.message || "Unable to save product.");
+      return;
+    }
+    if (!ok) {
+      setSaving(false);
+      setError("Unable to save product.");
       return;
     }
 

@@ -205,9 +205,13 @@ export function UsersManager() {
 
     setSaving(false);
 
-    if (!ok || !payload.success) {
+    if (!payload.success) {
       setFormErrors(payload.errors ?? {});
       setError(payload.message || "Unable to save user.");
+      return;
+    }
+    if (!ok) {
+      setError("Unable to save user.");
       return;
     }
 

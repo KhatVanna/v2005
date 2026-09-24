@@ -164,9 +164,13 @@ export function CustomersManager() {
 
     setSaving(false);
 
-    if (!ok || !payload.success) {
+    if (!payload.success) {
       setFormErrors(payload.errors ?? {});
       setError(payload.message || "Unable to update customer.");
+      return;
+    }
+    if (!ok) {
+      setError("Unable to update customer.");
       return;
     }
 
