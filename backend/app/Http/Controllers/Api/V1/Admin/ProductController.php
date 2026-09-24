@@ -12,6 +12,7 @@ use App\Models\Inventory;
 use App\Models\Product;
 use App\Models\User;
 use App\Support\ApiResponse;
+use App\Support\CatalogCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -116,6 +117,8 @@ class ProductController extends Controller
 
         $product->load(['category:id,name,slug', 'brand:id,name,slug', 'primaryImage']);
 
+        CatalogCache::bust();
+
         return ApiResponse::success([
             'product' => new ProductResource($product),
         ], 'Product created', 201);
@@ -152,6 +155,8 @@ class ProductController extends Controller
 
         $product->load(['category:id,name,slug', 'brand:id,name,slug', 'primaryImage']);
 
+        CatalogCache::bust();
+
         return ApiResponse::success([
             'product' => new ProductResource($product),
         ], 'Product updated');
@@ -162,6 +167,8 @@ class ProductController extends Controller
         $this->ensurePermission($request->user(), 'products.delete');
 
         $product->delete();
+
+        CatalogCache::bust();
 
         return ApiResponse::success(null, 'Product deleted');
     }

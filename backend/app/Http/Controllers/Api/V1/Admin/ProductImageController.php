@@ -9,6 +9,7 @@ use App\Models\ProductImage;
 use App\Models\User;
 use App\Services\CloudinaryService;
 use App\Support\ApiResponse;
+use App\Support\CatalogCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,6 +48,8 @@ class ProductImageController extends Controller
 
         $product->load(['category:id,name,slug', 'brand:id,name,slug', 'primaryImage', 'images']);
 
+        CatalogCache::bust();
+
         return ApiResponse::success([
             'image' => [
                 'id' => $image->id,
@@ -84,6 +87,8 @@ class ProductImageController extends Controller
         }
 
         $product->load(['category:id,name,slug', 'brand:id,name,slug', 'primaryImage', 'images']);
+
+        CatalogCache::bust();
 
         return ApiResponse::success([
             'product' => new ProductResource($product),
