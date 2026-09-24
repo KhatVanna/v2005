@@ -54,6 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         method: "GET",
         credentials: "include",
         cache: "no-store",
+        signal: AbortSignal.timeout(8_000),
       });
 
       if (response.status === 401 || response.status === 403) {
