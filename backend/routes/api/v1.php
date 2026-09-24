@@ -4,8 +4,10 @@ use App\Http\Controllers\Api\V1\Account\AddressController as AccountAddressContr
 use App\Http\Controllers\Api\V1\Account\OrderController as AccountOrderController;
 use App\Http\Controllers\Api\V1\Account\ProfileController;
 use App\Http\Controllers\Api\V1\Admin\CustomerController;
+use App\Http\Controllers\Api\V1\Admin\MediaController;
 use App\Http\Controllers\Api\V1\Admin\OrderController;
 use App\Http\Controllers\Api\V1\Admin\ProductController;
+use App\Http\Controllers\Api\V1\Admin\ProductImageController;
 use App\Http\Controllers\Api\V1\Admin\ReportController;
 use App\Http\Controllers\Api\V1\Admin\SettingController;
 use App\Http\Controllers\Api\V1\Admin\UserController;
@@ -43,12 +45,16 @@ Route::middleware('auth:sanctum')->prefix('account')->group(function () {
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/catalog/options', [ProductController::class, 'options']);
+    Route::post('/media/cloudinary-signature', [MediaController::class, 'cloudinarySignature']);
+
     Route::get('/products', [ProductController::class, 'index']);
     Route::post('/products', [ProductController::class, 'store']);
     Route::get('/products/{product}', [ProductController::class, 'show']);
     Route::put('/products/{product}', [ProductController::class, 'update']);
     Route::patch('/products/{product}', [ProductController::class, 'update']);
     Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+    Route::post('/products/{product}/images', [ProductImageController::class, 'store']);
+    Route::delete('/products/{product}/images/{image}', [ProductImageController::class, 'destroy']);
 
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);

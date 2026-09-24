@@ -27,7 +27,10 @@ admin-frontend (Next.js :3001)
 V2005/
 ├── user-frontend/   # Public customer storefront
 ├── admin-frontend/  # Admin dashboard (separate Next.js app)
-└── backend/         # Laravel API + PostgreSQL
+└── backend/         # Laravel API (Dockerfile → Railway + Neon)
+    ├── Dockerfile
+    ├── railway.toml
+    └── docker/
 ```
 
 ## Tech Stack
@@ -37,6 +40,7 @@ V2005/
 | User Frontend | Next.js, React, TypeScript, Tailwind CSS, Zustand, React Hook Form, Zod, Lucide |
 | Admin Frontend | Next.js, React, TypeScript, Tailwind CSS, Zustand, React Hook Form, Zod, Lucide |
 | Backend | Laravel, Sanctum, PostgreSQL |
+| Media | Cloudinary (product images) |
 
 ## Prerequisites
 
@@ -115,27 +119,105 @@ npm run dev:api
 
 ## Environment Variables
 
+### Local vs production
+
+| Concern | Local | Production |
+|---|---|---|
+| Database | PostgreSQL on `127.0.0.1` (`v2005_data`) via `backend/.env` | [Neon](https://neon.tech) via host env / `backend/.env.production` |
+| Images / media | Cloudinary (`v2005`) | Same Cloudinary cloud |
+
+Keep secrets out of git. Templates: `backend/.env.example` (local) and `backend/.env.production.example` (Neon).
+
 ### user-frontend / admin-frontend
 
 ```text
 NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 ```
 
-### backend
+### backend (local)
 
 ```text
-APP_NAME=V2005
-APP_URL=http://localhost:8000
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=v2005_data
 DB_USERNAME=postgres
 DB_PASSWORD=
-FRONTEND_USER_URL=http://localhost:3000
-FRONTEND_ADMIN_URL=http://localhost:3001
-SANCTUM_STATEFUL_DOMAINS=localhost:3000,localhost:3001,127.0.0.1:3000,127.0.0.1:3001
+DB_SSLMODE=prefer
+CLOUDINARY_CLOUD_NAME=v2005
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+CLOUDINARY_FOLDER=v2005/products
 ```
+
+### backend (production / Neon)
+
+Set these on your host (or copy from `.env.production.example`):
+
+```text
+DB_CONNECTION=pgsql
+DB_URL=postgresql://neondb_owner:PASSWORD@HOST/neondb?sslmode=require
+DB_SSLMODE=require
+CLOUDINARY_CLOUD_NAME=v2005
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+CLOUDINARY_FOLDER=v2005/products
+```
+
+After first deploy: `php artisan migrate --force` against Neon.
+
+### Deploy backend to Railway (Dockerfile)
+
+Files in `backend/`:
+
+- `Dockerfile` — PHP 8.3 + Composer image
+- `railway.toml` — health check `/up`
+- `docker/entrypoint.sh` — migrate + serve on `$PORT`
+
+**Steps**
+
+1. Push the repo to GitHub (already done).
+2. In [Railway](https://railway.app): **New Project** → **Deploy from GitHub** → select `v2005`.
+3. Service settings:
+   - **Root Directory:** `backend`
+   - Builder uses `Dockerfile` automatically (`railway.toml`).
+4. Add a public domain under **Settings → Networking**.
+5. Set variables (Variables tab) — use Neon + Cloudinary, not local Postgres:
+
+```text
+APP_NAME=V2005
+APP_ENV=production
+APP_DEBUG=false
+APP_KEY=base64:GENERATE_WITH_php_artisan_key_generate_--show
+APP_URL=https://YOUR-SERVICE.up.railway.app
+LOG_CHANNEL=stderr
+
+DB_CONNECTION=pgsql
+DB_URL=postgresql://neondb_owner:PASSWORD@ep-....neon.tech/neondb?sslmode=require
+DB_HOST=ep-divine-hill-b3dw3jxr.c-4.ap-southeast-1.aws.neon.tech
+DB_PORT=5432
+DB_DATABASE=neondb
+DB_USERNAME=neondb_owner
+DB_PASSWORD=YOUR_NEON_PASSWORD
+DB_SSLMODE=require
+
+CLOUDINARY_CLOUD_NAME=v2005
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+CLOUDINARY_FOLDER=v2005/products
+
+FRONTEND_USER_URL=https://your-storefront.vercel.app
+FRONTEND_ADMIN_URL=https://your-admin.vercel.app
+SANCTUM_STATEFUL_DOMAINS=your-storefront.vercel.app,your-admin.vercel.app
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+```
+
+6. Redeploy. Entrypoint runs `php artisan migrate --force` then serves the API.
+7. Health: `https://YOUR-SERVICE.up.railway.app/up` and `/api/v1/health`.
+
+Generate `APP_KEY` locally: `cd backend && php artisan key:generate --show`.
 
 Never commit real secrets.
 

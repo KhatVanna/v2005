@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->statefulApi();
 
+        // Railway / reverse proxies terminate TLS in front of the container.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             // Role/permission aliases will be registered in Phase 3.
         ]);

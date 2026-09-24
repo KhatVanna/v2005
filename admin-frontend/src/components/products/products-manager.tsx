@@ -11,6 +11,10 @@ import {
   X,
 } from "lucide-react";
 import { adminApi } from "@/lib/admin-api";
+import {
+  attachProductImage,
+  uploadProductImageToCloudinary,
+} from "@/lib/cloudinary-upload";
 import { useAuthStore } from "@/stores/auth-store";
 import type {
   AdminProduct,
@@ -128,6 +132,8 @@ export function ProductsManager() {
   const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const loadOptions = useCallback(async () => {
     const { ok, payload } = await adminApi<CatalogOptionsData>(
@@ -180,6 +186,8 @@ export function ProductsManager() {
     setEditing(null);
     setForm(EMPTY_FORM);
     setFormErrors({});
+    setImageFile(null);
+    setImagePreview(null);
     setModalOpen(true);
   }
 
@@ -187,6 +195,8 @@ export function ProductsManager() {
     setEditing(product);
     setForm(toFormValues(product));
     setFormErrors({});
+    setImageFile(null);
+    setImagePreview(product.primary_image?.path ?? null);
     setModalOpen(true);
   }
 
@@ -194,6 +204,21 @@ export function ProductsManager() {
     setModalOpen(false);
     setEditing(null);
     setFormErrors({});
+    setImageFile(null);
+    setImagePreview(null);
+  }
+
+  function onImageSelected(file: File | null) {
+    setImageFile(file);
+    if (!file) {
+      setImagePreview(editing?.primary_image?.path ?? null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(typeof reader.result === "string" ? reader.result : null);
+    };
+    reader.readAsDataURL(file);
   }
 
   async function onSubmit(event: React.FormEvent) {
@@ -201,6 +226,7 @@ export function ProductsManager() {
     setSaving(true);
     setFormErrors({});
     setNotice(null);
+    setError(null);
 
     const body = toPayload(form);
     const path = editing
@@ -213,14 +239,36 @@ export function ProductsManager() {
       body: JSON.stringify(body),
     });
 
-    setSaving(false);
-
     if (!ok || !payload.success) {
+      setSaving(false);
       setFormErrors(payload.errors ?? {});
       setError(payload.message || "Unable to save product.");
       return;
     }
 
+    const savedProduct = payload.data.product;
+
+    if (imageFile) {
+      try {
+        const uploaded = await uploadProductImageToCloudinary(imageFile);
+        await attachProductImage(
+          savedProduct.id,
+          uploaded.secure_url,
+          form.name.trim() || undefined
+        );
+      } catch (uploadError) {
+        setSaving(false);
+        setError(
+          uploadError instanceof Error
+            ? uploadError.message
+            : "Product saved, but image upload failed."
+        );
+        await loadProducts();
+        return;
+      }
+    }
+
+    setSaving(false);
     setNotice(editing ? "Product updated." : "Product created.");
     closeModal();
     await loadProducts();
@@ -402,11 +450,27 @@ export function ProductsManager() {
                     className="border-b border-[#f5f7fb] last:border-0"
                   >
                     <td className="px-4 py-4">
-                      <div className="min-w-[220px]">
-                        <p className="font-semibold text-slate-800">
-                          {product.name}
-                        </p>
-                        <p className="text-xs text-slate-400">{product.slug}</p>
+                      <div className="flex min-w-[220px] items-center gap-3">
+                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[#f6f9fc] ring-1 ring-[#e5eaf2]">
+                          {product.primary_image?.path ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={product.primary_image.path}
+                              alt={product.primary_image.alt_text ?? product.name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center text-[10px] text-slate-400">
+                              No img
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-slate-800">
+                            {product.name}
+                          </p>
+                          <p className="text-xs text-slate-400">{product.slug}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="px-4 py-4 font-medium text-slate-700">
@@ -546,6 +610,51 @@ export function ProductsManager() {
             </div>
 
             <form onSubmit={onSubmit} className="space-y-5 px-5 py-5">
+              <div className="rounded-xl border border-dashed border-[#d7e3f4] bg-[#f8fbff] p-4">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className="h-28 w-28 shrink-0 overflow-hidden rounded-xl bg-white ring-1 ring-[#e5eaf2]">
+                    {imagePreview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={imagePreview}
+                        alt="Product preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-xs text-slate-400">
+                        No image
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <p className="text-sm font-medium text-slate-700">
+                      Product image (Cloudinary)
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      JPG, PNG, or WebP. Uploads to your Cloudinary cloud{" "}
+                      <span className="font-semibold">v2005</span>.
+                    </p>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      onChange={(event) =>
+                        onImageSelected(event.target.files?.[0] ?? null)
+                      }
+                      className="block w-full text-sm text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-[#5d87ff] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white"
+                    />
+                    {imageFile ? (
+                      <button
+                        type="button"
+                        onClick={() => onImageSelected(null)}
+                        className="text-xs font-medium text-[#fa896b]"
+                      >
+                        Clear selected file
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
                   label="Name"
