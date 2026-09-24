@@ -308,50 +308,33 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .product-reveal__item,
   .product-image-fade,
-  .home-reveal__item,
+  .scroll-reveal,
   .skeleton-bone::after,
   .site-splash__bar-fill,
   .site-splash__glow {
     animation: none !important;
+    transition: none !important;
   }
 
   .product-reveal__item,
   .product-image-fade,
-  .home-reveal__item {
+  .scroll-reveal {
     opacity: 1;
     transform: none;
   }
 }
 
-/* Homepage Leu24-style staggered reveal */
-.home-reveal__item {
-  animation: product-reveal-in 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+/* Leu24-style scroll-triggered fade / rise */
+.scroll-reveal {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  transition:
+    opacity 720ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
 
-.home-reveal__item--1 {
-  animation-delay: 0ms;
-}
-
-.home-reveal__item--2 {
-  animation-delay: 70ms;
-}
-
-.home-reveal__item--3 {
-  animation-delay: 140ms;
-}
-
-.home-reveal__item--4 {
-  animation-delay: 210ms;
-}
-
-.home-reveal__item--5 {
-  animation-delay: 280ms;
-}
-
-.home-reveal__item--6 {
-  animation-delay: 340ms;
-}
-
-.home-reveal__item--7 {
-  animation-delay: 400ms;
+.scroll-reveal--in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
 }

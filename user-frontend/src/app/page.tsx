@@ -4,6 +4,7 @@ import { ProductSection } from "@/components/home/product-section";
 import { PromoBanner } from "@/components/home/promo-banner";
 import { TrustBar } from "@/components/home/trust-bar";
 import { VideoBanner } from "@/components/home/video-banner";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 import { fetchProducts } from "@/lib/catalog-api";
 
 export default async function HomePage() {
@@ -18,40 +19,36 @@ export default async function HomePage() {
       : catalog.items.filter((product) => product.compareAtPrice).slice(0, 5);
 
   return (
-    <div className="home-reveal">
-      <div className="home-reveal__item home-reveal__item--1">
-        <HeroSlider />
-      </div>
-      <div className="home-reveal__item home-reveal__item--2">
-        <CategoryGrid />
-      </div>
-      <div className="home-reveal__item home-reveal__item--3 bg-muted/40">
+    <>
+      <HeroSlider />
+      <CategoryGrid />
+      <div className="bg-muted/40">
         <ProductSection
           title="Top offers"
           subtitle="Act fast — while the deal is still valid."
           products={topOffers}
           href="/products?sort=offers"
           ctaLabel="Show more"
+          staggerCards
         />
       </div>
-      <div className="home-reveal__item home-reveal__item--4">
-        <ProductSection
-          title="Products"
-          subtitle={`${catalog.total.toLocaleString()} products ready to browse.`}
-          products={catalog.items}
-          href="/products"
-          ctaLabel="Our top picks"
-        />
-      </div>
-      <div className="home-reveal__item home-reveal__item--5">
+      <ProductSection
+        title="Products"
+        subtitle={`${catalog.total.toLocaleString()} products ready to browse.`}
+        products={catalog.items}
+        href="/products"
+        ctaLabel="Our top picks"
+        staggerCards
+      />
+      <ScrollReveal>
         <PromoBanner />
-      </div>
-      <div className="home-reveal__item home-reveal__item--6">
+      </ScrollReveal>
+      <ScrollReveal>
         <VideoBanner />
-      </div>
-      <div className="home-reveal__item home-reveal__item--7">
+      </ScrollReveal>
+      <ScrollReveal>
         <TrustBar />
-      </div>
-    </div>
+      </ScrollReveal>
+    </>
   );
 }
