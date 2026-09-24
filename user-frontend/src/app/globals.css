@@ -78,6 +78,86 @@ body {
   min-width: 0;
 }
 
+/* Logo-only splash loader */
+.site-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  transition: opacity 480ms ease, visibility 480ms ease;
+}
+
+.dark .site-splash {
+  background: #0b1220;
+}
+
+.site-splash--leave {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.site-splash__mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 9.5rem;
+  height: 9.5rem;
+}
+
+.site-splash__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid transparent;
+  border-top-color: #2563eb;
+  border-right-color: color-mix(in oklab, #2563eb 35%, transparent);
+  animation: site-splash-spin 1.05s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.site-splash__ring--delayed {
+  inset: 0.55rem;
+  border-top-color: color-mix(in oklab, #2563eb 55%, transparent);
+  border-right-color: transparent;
+  animation-duration: 1.45s;
+  animation-direction: reverse;
+}
+
+.site-splash__logo-wrap {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  animation: site-splash-breathe 1.6s ease-in-out infinite;
+}
+
+.site-splash__logo {
+  width: auto !important;
+  height: 2.75rem !important;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 18px rgba(37, 99, 235, 0.12));
+}
+
+@keyframes site-splash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes site-splash-breathe {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Apple-style product page entrance (iphone.com marketing motion) */
 .apple-reveal__item {
   animation: apple-rise 980ms cubic-bezier(0.25, 0.1, 0.25, 1) both;
@@ -138,6 +218,9 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .site-splash__ring,
+  .site-splash__ring--delayed,
+  .site-splash__logo-wrap,
   .apple-reveal__item,
   .apple-reveal__hero,
   .apple-image-fade,
@@ -146,6 +229,7 @@ body {
     transition: none !important;
   }
 
+  .site-splash__logo-wrap,
   .apple-reveal__item,
   .apple-reveal__hero,
   .apple-image-fade,
