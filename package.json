@@ -1,0 +1,18 @@
+{
+  "name": "v2005",
+  "version": "0.1.0",
+  "private": true,
+  "description": "V2005 e-commerce monorepo — user frontend, admin frontend, and Laravel API",
+  "scripts": {
+    "dev:user": "npm --prefix user-frontend run dev",
+    "dev:admin": "npm --prefix admin-frontend run dev",
+    "dev:api": "php backend/artisan serve --host=127.0.0.1 --port=8000",
+    "build:user": "npm --prefix user-frontend run build",
+    "build:admin": "npm --prefix admin-frontend run build",
+    "lint:user": "npm --prefix user-frontend run lint",
+    "lint:admin": "npm --prefix admin-frontend run lint"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
