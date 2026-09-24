@@ -16,22 +16,24 @@ class CategoryController extends Controller
     public function index(): JsonResponse
     {
         $items = Cache::remember(CatalogCache::key('categories'), self::TTL, function () {
-            return Category::query()
-                ->where('is_active', true)
-                ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
-                ->orderBy('sort_order')
-                ->orderBy('name')
-                ->get(['id', 'name', 'slug', 'image', 'description', 'sort_order'])
-                ->map(fn (Category $category) => [
-                    'id' => $category->id,
-                    'name' => $category->name,
-                    'slug' => $category->slug,
-                    'image' => $category->image,
-                    'description' => $category->description,
-                    'product_count' => (int) $category->products_count,
-                ])
-                ->values()
-                ->all();
+            return CatalogCache::serialize([
+                'items' => Category::query()
+                    ->where('is_active', true)
+                    ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
+                    ->orderBy('sort_order')
+                    ->orderBy('name')
+                    ->get(['id', 'name', 'slug', 'image', 'description', 'sort_order'])
+                    ->map(fn (Category $category) => [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                        'image' => $category->image,
+                        'description' => $category->description,
+                        'product_count' => (int) $category->products_count,
+                    ])
+                    ->values()
+                    ->all(),
+            ])['items'];
         });
 
         return ApiResponse::success(['items' => $items], 'Categories retrieved');

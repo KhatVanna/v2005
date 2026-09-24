@@ -54,8 +54,9 @@ async function catalogFetch<T>(path: string): Promise<T> {
 }
 
 export function mapApiProduct(product: ApiProduct): CatalogProduct {
-  const images = (product.images ?? [])
-    .map((image) => image.path)
+  const imageList = Array.isArray(product.images) ? product.images : [];
+  const images = imageList
+    .map((image) => image?.path)
     .filter((path): path is string => Boolean(path));
   const primary =
     product.primary_image?.path ?? images[0] ?? "/images/products/wireless-headphones.png";
@@ -133,16 +134,39 @@ export async function fetchProductBySlug(
   slug: string
 ): Promise<{ product: CatalogProduct; related: CatalogProduct[] } | null> {
   try {
-    const data = await catalogFetch<{ product: ApiProduct; related: ApiProduct[] }>(
-      `/catalog/products/${encodeURIComponent(slug)}`
+    const response = await fetch(
+      `${apiOrigin()}/api/v1/catalog/products/${encodeURIComponent(slug)}`,
+      {
+        headers: { Accept: "application/json" },
+        next: { revalidate: 60 },
+      }
     );
 
+    if (response.status === 404) {
+      return null;
+    }
+
+    const payload = (await response.json()) as ApiResponse<{
+      product: ApiProduct;
+      related: ApiProduct[];
+    }>;
+
+    if (!response.ok || payload.success !== true || !payload.data?.product) {
+      throw new Error(
+        payload.success === false
+          ? payload.message
+          : `Product request failed (${response.status})`
+      );
+    }
+
     return {
-      product: mapApiProduct(data.product),
-      related: (data.related ?? []).map(mapApiProduct),
+      product: mapApiProduct(payload.data.product),
+      related: (payload.data.related ?? []).map(mapApiProduct),
     };
-  } catch {
-    return null;
+  } catch (error) {
+    // Transient API failures must not look like a missing product.
+    console.error(`fetchProductBySlug(${slug}) failed`, error);
+    throw error;
   }
 }
 

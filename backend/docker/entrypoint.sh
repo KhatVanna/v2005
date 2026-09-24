@@ -35,4 +35,7 @@ if ! php artisan migrate --force --no-interaction; then
   php artisan migrate --force --no-interaction || echo "WARNING: migrate failed — check Neon DB_* / DB_URL"
 fi
 
+# Drop stale file-cache entries (corrupt catalog payloads from older deploys).
+php artisan cache:clear >/dev/null 2>&1 || true
+
 wait "${SERVER_PID}"

@@ -31,9 +31,9 @@ class ProductResource extends JsonResource
             'sales_count' => (int) $this->sales_count,
             'meta_title' => $this->meta_title,
             'meta_description' => $this->meta_description,
-            'published_at' => $this->published_at,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+            'published_at' => $this->published_at?->toISOString(),
+            'created_at' => $this->created_at?->toISOString(),
+            'updated_at' => $this->updated_at?->toISOString(),
             'category' => $this->whenLoaded('category', fn () => $this->category ? [
                 'id' => $this->category->id,
                 'name' => $this->category->name,
@@ -49,13 +49,16 @@ class ProductResource extends JsonResource
                 'path' => $this->primaryImage->path,
                 'alt_text' => $this->primaryImage->alt_text,
             ] : null),
-            'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($image) => [
-                'id' => $image->id,
-                'path' => $image->path,
-                'alt_text' => $image->alt_text,
-                'is_primary' => (bool) $image->is_primary,
-                'sort_order' => (int) $image->sort_order,
-            ])->values()),
+            'images' => $this->whenLoaded('images', fn () => $this->images
+                ->map(fn ($image) => [
+                    'id' => $image->id,
+                    'path' => $image->path,
+                    'alt_text' => $image->alt_text,
+                    'is_primary' => (bool) $image->is_primary,
+                    'sort_order' => (int) $image->sort_order,
+                ])
+                ->values()
+                ->all()),
         ];
     }
 }

@@ -31,7 +31,7 @@ class ProductController extends Controller
         $payload = Cache::remember(
             CatalogCache::key('products:'.md5(serialize($params))),
             self::LIST_TTL,
-            fn () => $this->listPayload($params)
+            fn () => CatalogCache::serialize($this->listPayload($params))
         );
 
         return ApiResponse::success($payload, 'Products retrieved');
@@ -42,7 +42,7 @@ class ProductController extends Controller
         $payload = Cache::remember(
             CatalogCache::key('product:'.$slug),
             self::DETAIL_TTL,
-            fn () => $this->detailPayload($slug)
+            fn () => CatalogCache::serialize($this->detailPayload($slug))
         );
 
         return ApiResponse::success($payload, 'Product retrieved');
