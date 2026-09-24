@@ -1,9 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 15;
+
 const API_ORIGIN = process.env.LARAVEL_API_ORIGIN ?? "http://127.0.0.1:8000";
 const TOKEN_COOKIE = "v2005_admin_token";
 const ADMIN_ROLES = new Set(["super-admin", "admin", "staff"]);
+const UPSTREAM_TIMEOUT_MS = 8_000;
 
 type AuthUser = {
   roles?: Array<{ slug: string }>;
@@ -50,17 +53,30 @@ function hasAdminRole(user: AuthUser) {
 export async function POST(request: NextRequest) {
   const body = await request.json();
 
-  const upstream = await fetch(laravelUrl("/auth/login"), {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      ...body,
-      portal: "admin",
-    }),
-  });
+  let upstream: Response;
+  try {
+    upstream = await fetch(laravelUrl("/auth/login"), {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...body,
+        portal: "admin",
+      }),
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+    });
+  } catch {
+    return NextResponse.json(
+      {
+        success: false,
+        message:
+          "Laravel API unreachable (timeout). Check Railway service health and LARAVEL_API_ORIGIN.",
+      },
+      { status: 503 }
+    );
+  }
 
   const payload = (await upstream.json()) as AuthSuccess | {
     success: false;

@@ -54,6 +54,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         method: "GET",
         credentials: "include",
         cache: "no-store",
+        // Don't hang the whole portal when Railway is down / slow.
+        signal: AbortSignal.timeout(8_000),
       });
 
       // Real auth failure — clear session.
