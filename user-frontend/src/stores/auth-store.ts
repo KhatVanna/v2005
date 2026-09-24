@@ -4,6 +4,8 @@ import { create } from "zustand";
 import type { AuthUser } from "@/types/auth";
 
 const STORAGE_KEY = "v2005-store-user";
+const ME_TIMEOUT_MS = 12_000;
+const GUEST_UNLOCK_MS = 900;
 
 type AuthState = {
   user: AuthUser | null;
@@ -36,6 +38,15 @@ function writeCachedUser(user: AuthUser | null) {
   }
 }
 
+async function fetchMe(): Promise<Response> {
+  return fetch("/api/auth/me", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+    signal: AbortSignal.timeout(ME_TIMEOUT_MS),
+  });
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   hydrated: false,
@@ -44,46 +55,59 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ user });
   },
   hydrate: async () => {
-    const cachedUser = readCachedUser();
-    if (cachedUser && !get().user) {
-      set({ user: cachedUser });
+    if (get().hydrated) {
+      return;
     }
 
-    try {
-      const response = await fetch("/api/auth/me", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-        signal: AbortSignal.timeout(8_000),
-      });
+    const cachedUser = readCachedUser();
 
-      if (response.status === 401 || response.status === 403) {
-        writeCachedUser(null);
-        set({ user: null, hydrated: true });
-        return;
-      }
+    if (cachedUser) {
+      set({ user: cachedUser, hydrated: true });
+    }
 
-      if (!response.ok) {
+    const mePromise = fetchMe()
+      .then(async (response) => {
+        if (response.status === 401 || response.status === 403) {
+          writeCachedUser(null);
+          set({ user: null, hydrated: true });
+          return;
+        }
+
+        if (!response.ok) {
+          set({
+            user: get().user ?? cachedUser,
+            hydrated: true,
+          });
+          return;
+        }
+
+        const payload = await response.json();
+        const user = (payload?.data?.user as AuthUser | null) ?? null;
+        writeCachedUser(user);
+        set({ user, hydrated: true });
+      })
+      .catch(() => {
         set({
           user: get().user ?? cachedUser,
           hydrated: true,
         });
-        return;
-      }
+      });
 
-      const payload = await response.json();
-      const user = (payload?.data?.user as AuthUser | null) ?? null;
-      writeCachedUser(user);
-      set({
-        user,
-        hydrated: true,
-      });
-    } catch {
-      set({
-        user: get().user ?? cachedUser,
-        hydrated: true,
-      });
+    if (!cachedUser) {
+      await Promise.race([
+        mePromise,
+        new Promise<void>((resolve) => {
+          window.setTimeout(() => {
+            if (!get().hydrated) {
+              set({ user: null, hydrated: true });
+            }
+            resolve();
+          }, GUEST_UNLOCK_MS);
+        }),
+      ]);
     }
+
+    await mePromise;
   },
   logout: async () => {
     writeCachedUser(null);
