@@ -213,7 +213,13 @@ SANCTUM_STATEFUL_DOMAINS=your-storefront.vercel.app,your-admin.vercel.app
 SESSION_DRIVER=file
 CACHE_STORE=file
 QUEUE_CONNECTION=sync
+DB_PERSISTENT=true
+DB_CONNECT_TIMEOUT=10
 ```
+
+Pick the Railway region closest to the Neon region (Neon here is `ap-southeast-1`, so use
+Singapore / Southeast Asia). Cross-region deploys pay ~2s per database connect, which dominates
+every uncached API request.
 
 6. Redeploy. Entrypoint runs `php artisan migrate --force` then serves the API with FrankenPHP (concurrent — do not use `php artisan serve` in production).
 7. Health: `https://YOUR-SERVICE.up.railway.app/up` and `/api/v1/health`.
