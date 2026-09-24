@@ -213,3 +213,43 @@ body {
     transform: translateX(320%);
   }
 }
+
+/* L192-style skeleton shimmer */
+.skeleton-bone {
+  position: relative;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--muted) 88%, var(--border));
+}
+
+.skeleton-bone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, #ffffff 55%, transparent) 50%,
+    transparent 100%
+  );
+  animation: skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+.dark .skeleton-bone {
+  background: color-mix(in oklab, var(--muted) 80%, #000);
+}
+
+.dark .skeleton-bone::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, #ffffff 12%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

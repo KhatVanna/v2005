@@ -72,7 +72,7 @@ export function ProductDetailView({ product, related }: ProductDetailViewProps) 
         </h1>
       </div>
 
-      <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+      <div className="grid gap-5 sm:gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
         <ProductGallery images={galleryImages} alt={product.name} discount={discount} />
 
         <div className="space-y-4 sm:space-y-5">
