@@ -18,10 +18,14 @@ export default async function HomePage() {
       : catalog.items.filter((product) => product.compareAtPrice).slice(0, 5);
 
   return (
-    <>
-      <HeroSlider />
-      <CategoryGrid />
-      <div className="bg-muted/40">
+    <div className="home-reveal">
+      <div className="home-reveal__item home-reveal__item--1">
+        <HeroSlider />
+      </div>
+      <div className="home-reveal__item home-reveal__item--2">
+        <CategoryGrid />
+      </div>
+      <div className="home-reveal__item home-reveal__item--3 bg-muted/40">
         <ProductSection
           title="Top offers"
           subtitle="Act fast — while the deal is still valid."
@@ -30,16 +34,24 @@ export default async function HomePage() {
           ctaLabel="Show more"
         />
       </div>
-      <ProductSection
-        title="Products"
-        subtitle={`${catalog.total.toLocaleString()} products ready to browse.`}
-        products={catalog.items}
-        href="/products"
-        ctaLabel="Our top picks"
-      />
-      <PromoBanner />
-      <VideoBanner />
-      <TrustBar />
-    </>
+      <div className="home-reveal__item home-reveal__item--4">
+        <ProductSection
+          title="Products"
+          subtitle={`${catalog.total.toLocaleString()} products ready to browse.`}
+          products={catalog.items}
+          href="/products"
+          ctaLabel="Our top picks"
+        />
+      </div>
+      <div className="home-reveal__item home-reveal__item--5">
+        <PromoBanner />
+      </div>
+      <div className="home-reveal__item home-reveal__item--6">
+        <VideoBanner />
+      </div>
+      <div className="home-reveal__item home-reveal__item--7">
+        <TrustBar />
+      </div>
+    </div>
   );
 }
