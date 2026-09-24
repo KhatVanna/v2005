@@ -4,11 +4,18 @@ import { ProductSection } from "@/components/home/product-section";
 import { PromoBanner } from "@/components/home/promo-banner";
 import { TrustBar } from "@/components/home/trust-bar";
 import { VideoBanner } from "@/components/home/video-banner";
-import { demoProducts } from "@/data/demo-catalog";
+import { fetchProducts } from "@/lib/catalog-api";
 
-export default function HomePage() {
-  const topOffers = demoProducts.filter((product) => product.featured).slice(0, 5);
-  const products = demoProducts.slice(0, 50);
+export default async function HomePage() {
+  const [featured, catalog] = await Promise.all([
+    fetchProducts({ featured: true, perPage: 5, sort: "latest" }),
+    fetchProducts({ perPage: 50, sort: "latest" }),
+  ]);
+
+  const topOffers =
+    featured.items.length > 0
+      ? featured.items
+      : catalog.items.filter((product) => product.compareAtPrice).slice(0, 5);
 
   return (
     <>
@@ -25,8 +32,8 @@ export default function HomePage() {
       </div>
       <ProductSection
         title="Products"
-        subtitle={`${demoProducts.length.toLocaleString()} products ready to browse.`}
-        products={products}
+        subtitle={`${catalog.total.toLocaleString()} products ready to browse.`}
+        products={catalog.items}
         href="/products"
         ctaLabel="Our top picks"
       />

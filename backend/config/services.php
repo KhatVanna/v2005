@@ -41,6 +41,7 @@ return [
         'api_secret' => env('CLOUDINARY_API_SECRET'),
         'folder' => env('CLOUDINARY_FOLDER', 'v2005/products'),
         'url' => env('CLOUDINARY_URL'),
+        'verify_ssl' => filter_var(env('CLOUDINARY_VERIFY_SSL', true), FILTER_VALIDATE_BOOLEAN),
     ],
 
 ];

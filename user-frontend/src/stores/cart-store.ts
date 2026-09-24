@@ -1,10 +1,10 @@
 "use client";
 
 import { create } from "zustand";
-import type { DemoProduct } from "@/data/demo-catalog";
+import type { CatalogProduct } from "@/data/demo-catalog.types";
 
 export type CartItem = {
-  product: DemoProduct;
+  product: CatalogProduct;
   quantity: number;
 };
 
@@ -14,7 +14,7 @@ type CartState = {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  addItem: (product: DemoProduct, quantity?: number) => void;
+  addItem: (product: CatalogProduct, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;

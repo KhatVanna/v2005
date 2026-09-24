@@ -50,6 +50,55 @@ class CloudinaryService
         ];
     }
 
+    /**
+     * Upload a local image file and return Cloudinary metadata.
+     *
+     * @return array{secure_url: string, public_id: string}
+     */
+    public function uploadLocalFile(string $absolutePath, string $publicId, ?string $folder = null): array
+    {
+        $this->assertConfigured();
+
+        if (! is_file($absolutePath)) {
+            throw new RuntimeException("Cloudinary upload source missing: {$absolutePath}");
+        }
+
+        $timestamp = time();
+        $folder = $folder ?: $this->folder();
+        $params = [
+            'folder' => $folder,
+            'overwrite' => 'true',
+            'public_id' => $publicId,
+            'timestamp' => $timestamp,
+        ];
+
+        $response = Http::withOptions(['verify' => (bool) config('services.cloudinary.verify_ssl', true)])
+            ->asMultipart()
+            ->attach('file', file_get_contents($absolutePath), basename($absolutePath))
+            ->post(
+                sprintf('https://api.cloudinary.com/v1_1/%s/image/upload', $this->cloudName()),
+                [
+                    ['name' => 'api_key', 'contents' => $this->apiKey()],
+                    ['name' => 'timestamp', 'contents' => (string) $timestamp],
+                    ['name' => 'folder', 'contents' => $folder],
+                    ['name' => 'public_id', 'contents' => $publicId],
+                    ['name' => 'overwrite', 'contents' => 'true'],
+                    ['name' => 'signature', 'contents' => $this->sign($params)],
+                ]
+            );
+
+        if (! $response->successful() || blank($response->json('secure_url'))) {
+            throw new RuntimeException(
+                'Cloudinary upload failed: '.($response->json('error.message') ?? $response->body())
+            );
+        }
+
+        return [
+            'secure_url' => (string) $response->json('secure_url'),
+            'public_id' => (string) $response->json('public_id'),
+        ];
+    }
+
     public function destroy(?string $publicId): bool
     {
         if (! filled($publicId)) {

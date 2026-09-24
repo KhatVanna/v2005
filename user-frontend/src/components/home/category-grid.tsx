@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { demoCategories } from "@/data/demo-catalog";
+import { fetchCategories } from "@/lib/catalog-api";
 
-export function CategoryGrid() {
+export async function CategoryGrid() {
+  const categories = await fetchCategories();
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6">
       <div className="mb-8 flex items-end justify-between gap-4">
@@ -21,7 +23,7 @@ export function CategoryGrid() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {demoCategories.map((category) => (
+        {categories.map((category) => (
           <Link
             key={category.id}
             href={`/products?category=${category.slug}`}

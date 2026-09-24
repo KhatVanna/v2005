@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/product/product-card";
-import { demoCategories, demoProducts } from "@/data/demo-catalog";
+import { fetchCategories, fetchProducts } from "@/lib/catalog-api";
 
 export const metadata: Metadata = {
   title: "Products",
   description: "Browse the full V2005 product catalog with filters and sorting.",
 };
-
-const PAGE_SIZE = 20;
 
 type ProductsPageProps = {
   searchParams: Promise<{
@@ -21,43 +19,30 @@ type ProductsPageProps = {
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await searchParams;
-  const query = params.q?.toLowerCase().trim() ?? "";
+  const query = params.q?.trim() ?? "";
   const category = params.category ?? "";
   const sort = params.sort ?? "latest";
   const page = Math.max(1, Number.parseInt(params.page ?? "1", 10) || 1);
 
-  let products = [...demoProducts];
+  const [categories, catalog] = await Promise.all([
+    fetchCategories(),
+    fetchProducts({
+      q: query || undefined,
+      category: category || undefined,
+      sort,
+      page,
+      perPage: 20,
+    }),
+  ]);
 
-  if (category) {
-    products = products.filter((product) => product.category === category);
-  }
-
-  if (query) {
-    products = products.filter(
-      (product) =>
-        product.name.toLowerCase().includes(query) ||
-        product.brand.toLowerCase().includes(query)
-    );
-  }
-
-  if (sort === "price-asc") {
-    products.sort((a, b) => a.price - b.price);
-  } else if (sort === "price-desc") {
-    products.sort((a, b) => b.price - a.price);
-  } else if (sort === "offers") {
-    products = products.filter((product) => Boolean(product.compareAtPrice));
-  } else if (sort === "popular") {
-    products.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
-  }
-
-  const total = products.length;
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const total = catalog.total;
+  const totalPages = Math.max(1, catalog.lastPage);
   const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageItems = products.slice(start, start + PAGE_SIZE);
+  const pageItems = catalog.items;
+  const allCount = categories.reduce((sum, item) => sum + item.productCount, 0);
 
   const categoryName =
-    demoCategories.find((item) => item.slug === category)?.name ?? "All products";
+    categories.find((item) => item.slug === category)?.name ?? "All products";
 
   function buildHref(nextPage: number) {
     const search = new URLSearchParams();
@@ -101,10 +86,10 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                   href="/products"
                   className={`text-sm ${!category ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  All ({demoProducts.length})
+                  All ({allCount})
                 </Link>
               </li>
-              {demoCategories.map((item) => (
+              {categories.map((item) => (
                 <li key={item.id}>
                   <Link
                     href={`/products?category=${item.slug}`}

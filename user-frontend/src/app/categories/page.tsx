@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { demoCategories } from "@/data/demo-catalog";
+import { fetchCategories } from "@/lib/catalog-api";
 
 export const metadata: Metadata = {
   title: "Categories",
   description: "Browse V2005 product categories.",
 };
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const categories = await fetchCategories();
+
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-10 sm:px-6">
       <nav className="mb-4 text-sm text-muted-foreground">
@@ -24,13 +26,13 @@ export default function CategoriesPage() {
       </p>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {demoCategories.map((category) => (
+        {categories.map((category) => (
           <Link
             key={category.id}
             href={`/products?category=${category.slug}`}
             className="group overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
           >
-        <div className="relative aspect-[16/10]">
+            <div className="relative aspect-[16/10]">
               <Image
                 src={category.image}
                 alt={category.name}

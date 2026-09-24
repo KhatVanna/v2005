@@ -3,13 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
-import { type DemoProduct } from "@/data/demo-catalog";
+import { type CatalogProduct } from "@/data/demo-catalog.types";
 import { useFormatMoney } from "@/hooks/use-format-money";
 import { useCartStore } from "@/stores/cart-store";
 import { useWishlistStore } from "@/stores/wishlist-store";
 
 type ProductCardProps = {
-  product: DemoProduct;
+  product: CatalogProduct;
 };
 
 export function ProductCard({ product }: ProductCardProps) {

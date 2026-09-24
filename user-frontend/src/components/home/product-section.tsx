@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ProductCard } from "@/components/product/product-card";
-import type { DemoProduct } from "@/data/demo-catalog";
+import type { CatalogProduct } from "@/data/demo-catalog.types";
 
 type ProductSectionProps = {
   title: string;
   subtitle?: string;
-  products: DemoProduct[];
+  products: CatalogProduct[];
   href?: string;
   ctaLabel?: string;
 };

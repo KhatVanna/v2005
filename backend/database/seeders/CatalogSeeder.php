@@ -13,9 +13,11 @@ use App\Models\ProductVariant;
 use App\Models\Review;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\CloudinaryService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use RuntimeException;
 
 class CatalogSeeder extends Seeder
 {
@@ -91,6 +93,9 @@ class CatalogSeeder extends Seeder
 
     public function run(): void
     {
+        /** @var array<string, string> $cloudinaryByLocalPath */
+        $cloudinaryByLocalPath = $this->uploadCatalogMedia();
+
         $categories = [
             ['name' => 'Top Offers', 'slug' => 'top-offers'],
             ['name' => 'Smartphones & Accessories', 'slug' => 'smartphones-accessories'],
@@ -102,12 +107,13 @@ class CatalogSeeder extends Seeder
 
         $categoryIds = [];
         foreach ($categories as $index => $category) {
+            $localImage = array_values(self::IMAGE_BY_NAME)[$index % count(self::IMAGE_BY_NAME)];
             $model = Category::query()->updateOrCreate(
                 ['slug' => $category['slug']],
                 [
                     'name' => $category['name'],
                     'description' => $category['name'].' products at V2005',
-                    'image' => array_values(self::IMAGE_BY_NAME)[$index % count(self::IMAGE_BY_NAME)],
+                    'image' => $cloudinaryByLocalPath[$localImage] ?? $localImage,
                     'is_active' => true,
                     'sort_order' => $index + 1,
                 ]
@@ -237,7 +243,8 @@ class CatalogSeeder extends Seeder
             $categoryIds,
             $brandIds,
             $now,
-            $customer
+            $customer,
+            $cloudinaryByLocalPath
         ) {
             // Keep existing sample order product if present; recreate catalog at scale.
             Product::query()->where('sku', 'like', 'V2005-%')->forceDelete();
@@ -262,7 +269,6 @@ class CatalogSeeder extends Seeder
                     ? round($price * (1.12 + ($random * 0.35)), 2)
                     : null;
                 $stock = max(1, (int) floor($random * 40) + 1);
-                $image = self::IMAGE_BY_NAME[$nameBase] ?? '/images/products/wireless-headphones.png';
                 $brandId = $brandIds[($i - 1) % count($brandIds)];
 
                 $productRows[] = [
@@ -299,17 +305,20 @@ class CatalogSeeder extends Seeder
 
                     foreach ($inserted as $product) {
                         $baseName = preg_replace('/ — Edition \d+$/u', '', $product->name) ?: $product->name;
-                        $imagePath = self::IMAGE_BY_NAME[$baseName] ?? '/images/products/wireless-headphones.png';
+                        $localPrimary = self::IMAGE_BY_NAME[$baseName] ?? '/images/products/wireless-headphones.png';
+                        $galleryLocals = $this->galleryLocalPaths($localPrimary);
 
-                        $imageRows[] = [
-                            'product_id' => $product->id,
-                            'path' => $imagePath,
-                            'alt_text' => $product->name,
-                            'sort_order' => 0,
-                            'is_primary' => true,
-                            'created_at' => $now,
-                            'updated_at' => $now,
-                        ];
+                        foreach ($galleryLocals as $sortOrder => $localPath) {
+                            $imageRows[] = [
+                                'product_id' => $product->id,
+                                'path' => $cloudinaryByLocalPath[$localPath] ?? $localPath,
+                                'alt_text' => $product->name,
+                                'sort_order' => $sortOrder,
+                                'is_primary' => $sortOrder === 0,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
 
                         $variantSku = $product->sku.'-STD';
                         $variantRows[] = [
@@ -374,6 +383,8 @@ class CatalogSeeder extends Seeder
             }
         });
 
+        $bannerLocal = '/images/products/wireless-headphones.png';
+
         Coupon::query()->updateOrCreate(
             ['code' => 'WELCOME10'],
             [
@@ -394,7 +405,7 @@ class CatalogSeeder extends Seeder
             ['title' => 'Discover Something New'],
             [
                 'subtitle' => 'Shop quality products at V2005',
-                'image' => '/images/products/wireless-headphones.png',
+                'image' => $cloudinaryByLocalPath[$bannerLocal] ?? $bannerLocal,
                 'link_url' => '/products',
                 'button_text' => 'Shop Now',
                 'placement' => 'homepage',
@@ -422,6 +433,68 @@ class CatalogSeeder extends Seeder
                 'type' => 'string',
             ]
         );
+    }
+
+    /**
+     * Upload unique catalog images (primary + gallery) to Cloudinary once.
+     *
+     * @return array<string, string> local web path => Cloudinary secure_url
+     */
+    private function uploadCatalogMedia(): array
+    {
+        $publicRoot = realpath(base_path('../user-frontend/public'));
+        if ($publicRoot === false) {
+            throw new RuntimeException(
+                'Cannot find user-frontend/public for Cloudinary seeding. Run seed from the monorepo.'
+            );
+        }
+
+        $cloudinary = app(CloudinaryService::class);
+        $map = [];
+
+        $localPaths = array_values(array_unique(self::IMAGE_BY_NAME));
+        foreach ($localPaths as $localPath) {
+            foreach ($this->galleryLocalPaths($localPath) as $path) {
+                if (isset($map[$path])) {
+                    continue;
+                }
+
+                $absolute = $publicRoot.str_replace('/', DIRECTORY_SEPARATOR, $path);
+                if (! is_file($absolute)) {
+                    // Skip missing gallery variants; keep primary if present.
+                    continue;
+                }
+
+                $publicId = trim(str_replace(['/images/products/', '.png'], ['', ''], $path), '/');
+                $publicId = str_replace('/', '-', $publicId);
+
+                $this->command?->info("Uploading to Cloudinary: {$path}");
+                $uploaded = $cloudinary->uploadLocalFile($absolute, $publicId);
+                $map[$path] = $uploaded['secure_url'];
+            }
+        }
+
+        if ($map === []) {
+            throw new RuntimeException('No product images were uploaded to Cloudinary.');
+        }
+
+        return $map;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function galleryLocalPaths(string $primaryPath): array
+    {
+        $file = basename($primaryPath);
+        $base = preg_replace('/\.png$/i', '', $file) ?: 'wireless-headphones';
+
+        return [
+            $primaryPath,
+            "/images/products/gallery/{$base}-2.png",
+            "/images/products/gallery/{$base}-3.png",
+            "/images/products/gallery/{$base}-4.png",
+        ];
     }
 
     private function seededRandom(int $seed): float

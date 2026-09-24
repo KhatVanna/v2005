@@ -2,12 +2,12 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { DemoProduct } from "@/data/demo-catalog";
+import type { CatalogProduct } from "@/data/demo-catalog.types";
 
 type WishlistState = {
-  items: DemoProduct[];
-  toggleItem: (product: DemoProduct) => void;
-  addItem: (product: DemoProduct) => void;
+  items: CatalogProduct[];
+  toggleItem: (product: CatalogProduct) => void;
+  addItem: (product: CatalogProduct) => void;
   removeItem: (productId: string) => void;
   hasItem: (productId: string) => boolean;
   clear: () => void;
