@@ -67,7 +67,7 @@ export function ProductGallery({ images, alt, discount }: ProductGalleryProps) {
             alt={alt}
             fill
             priority
-            className="object-contain p-4 sm:p-6"
+            className="product-image-fade object-contain p-4 sm:p-6"
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
           {discount ? (

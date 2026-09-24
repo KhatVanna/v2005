@@ -253,3 +253,70 @@ body {
     transform: translateX(100%);
   }
 }
+
+/* Leu24-style product page fade / rise reveal */
+.product-reveal__item {
+  animation: product-reveal-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.product-reveal__item--2 {
+  animation-delay: 60ms;
+}
+
+.product-reveal__item--3 {
+  animation-delay: 120ms;
+}
+
+.product-reveal__item--4 {
+  animation-delay: 180ms;
+}
+
+.product-reveal__item--5 {
+  animation-delay: 240ms;
+}
+
+.product-reveal__item--6 {
+  animation-delay: 300ms;
+}
+
+.product-image-fade {
+  animation: product-image-fade 480ms ease-out both;
+}
+
+@keyframes product-reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes product-image-fade {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-reveal__item,
+  .product-image-fade,
+  .skeleton-bone::after,
+  .site-splash__bar-fill,
+  .site-splash__glow {
+    animation: none !important;
+  }
+
+  .product-reveal__item,
+  .product-image-fade {
+    opacity: 1;
+    transform: none;
+  }
+}

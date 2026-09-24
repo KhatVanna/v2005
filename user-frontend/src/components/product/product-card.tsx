@@ -27,7 +27,7 @@ export function ProductCard({ product }: ProductCardProps) {
       : null;
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md">
       <div className="relative aspect-square overflow-hidden bg-muted">
         <Link href={`/products/${product.slug}`} className="relative block h-full w-full">
           <Image
@@ -35,7 +35,7 @@ export function ProductCard({ product }: ProductCardProps) {
             alt={product.name}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
-            className="object-contain p-3 transition duration-500 group-hover:scale-105"
+            className="object-contain p-3 transition duration-500 ease-out group-hover:scale-105"
           />
         </Link>
 
