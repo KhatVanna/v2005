@@ -170,9 +170,10 @@ After first deploy: `php artisan migrate --force` against Neon.
 
 Files in `backend/`:
 
-- `Dockerfile` — PHP 8.3 + Composer image
+- `Dockerfile` — FrankenPHP (PHP 8.4) concurrent server
 - `railway.toml` — health check `/up`
-- `docker/entrypoint.sh` — migrate + serve on `$PORT`
+- `docker/entrypoint.sh` — migrate + FrankenPHP on `$PORT`
+- `docker/Caddyfile` — public Laravel front controller
 
 **Steps**
 
@@ -209,12 +210,12 @@ CLOUDINARY_FOLDER=v2005/products
 FRONTEND_USER_URL=https://your-storefront.vercel.app
 FRONTEND_ADMIN_URL=https://your-admin.vercel.app
 SANCTUM_STATEFUL_DOMAINS=your-storefront.vercel.app,your-admin.vercel.app
-SESSION_DRIVER=database
-CACHE_STORE=database
-QUEUE_CONNECTION=database
+SESSION_DRIVER=file
+CACHE_STORE=file
+QUEUE_CONNECTION=sync
 ```
 
-6. Redeploy. Entrypoint runs `php artisan migrate --force` then serves the API.
+6. Redeploy. Entrypoint runs `php artisan migrate --force` then serves the API with FrankenPHP (concurrent — do not use `php artisan serve` in production).
 7. Health: `https://YOUR-SERVICE.up.railway.app/up` and `/api/v1/health`.
 
 Generate `APP_KEY` locally: `cd backend && php artisan key:generate --show`.

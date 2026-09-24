@@ -1,6 +1,6 @@
 # V2005 Laravel API — Railway / production image
 # Context: backend/ (set Railway Root Directory to `backend`)
-# Laravel 13 requires PHP >= 8.4.1
+# FrankenPHP serves concurrent requests (php artisan serve is single-threaded).
 
 FROM php:8.4-cli-bookworm AS vendor
 
@@ -25,21 +25,9 @@ COPY . .
 RUN composer dump-autoload --optimize --classmap-authoritative --no-interaction
 
 
-FROM php:8.4-cli-bookworm
+FROM dunglas/frankenphp:1-php8.4-bookworm
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        git \
-        curl \
-        unzip \
-        libpq-dev \
-        libzip-dev \
-        libicu-dev \
-        libpng-dev \
-        libjpeg62-turbo-dev \
-        libfreetype6-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
+RUN install-php-extensions \
         pdo_pgsql \
         pgsql \
         bcmath \
@@ -47,28 +35,25 @@ RUN apt-get update \
         zip \
         gd \
         opcache \
-        pcntl \
-    && rm -rf /var/lib/apt/lists/*
+        pcntl
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+WORKDIR /app
 
-WORKDIR /var/www/html
-
-COPY --from=vendor /app /var/www/html
+COPY --from=vendor /app /app
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/Caddyfile /etc/caddy/Caddyfile
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
 
-USER www-data
-
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr \
-    PORT=8000
+    PORT=8080 \
+    SERVER_NAME=:8080
 
-EXPOSE 8000
+EXPOSE 8080
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

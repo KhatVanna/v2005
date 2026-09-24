@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-cd /var/www/html
+cd /app
 
 mkdir -p \
   storage/framework/cache/data \
@@ -18,11 +18,14 @@ if [ -n "${APP_KEY:-}" ]; then
   php artisan view:cache || true
 fi
 
-# Bind HTTP first so Railway /up healthchecks succeed while Neon migrations run.
-php artisan serve --host=0.0.0.0 --port="${PORT:-8000}" &
+# Railway injects PORT; FrankenPHP/Caddy reads SERVER_NAME / {$PORT}.
+export PORT="${PORT:-8080}"
+export SERVER_NAME=":${PORT}"
+
+# Start FrankenPHP first so /up healthchecks pass while Neon migrate runs.
+frankenphp run --config /etc/caddy/Caddyfile &
 SERVER_PID=$!
 
-# Give the built-in server a moment to listen before health checks hit.
 sleep 2
 
 # Neon free/cold starts are slow; keep serving even if migrate needs a retry.
